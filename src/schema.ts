@@ -5,6 +5,7 @@ import {
 	timestamp,
 	serial,
 	boolean,
+	primaryKey,
 } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
@@ -36,7 +37,7 @@ export const classes = pgTable('classes', {
 })
 export const resources = pgTable('resources', {
 	id: serial('id').notNull().primaryKey(),
-	link: text('link').notNull(),
+	link: text('link').notNull().unique(),
 	name: text('name'),
 	format: text('format'),
 })
@@ -50,7 +51,7 @@ export const courseResources = pgTable('course_resources', {
 		.references(() => resources.id),
 })
 export const votes = pgTable('votes', {
-	id: serial('id').notNull().primaryKey(),
+	// id: serial('id').notNull().primaryKey(),
 	userId: text('user_id')
 		.notNull()
 		.references(() => users.id),
@@ -61,4 +62,15 @@ export const votes = pgTable('votes', {
 		.notNull()
 		.references(() => classes.id),
 	isLiked: boolean('is_liked').notNull(),
+}, (table) => {
+	return {
+		pk: primaryKey({
+			name: 'vote_id',
+			columns: [
+				table.userId,
+				table.classId,
+				table.courseResourcesId
+			]
+		})
+	}
 })
