@@ -1,31 +1,45 @@
+import { validateRequest } from '@/auth'
 import { db } from '@/db'
-import { courseResources, resources, votes } from '@/schema'
-import { eq } from 'drizzle-orm'
+import { resources, votes } from '@/schema'
 export default async function Form({ str }: { str: string | undefined }) {
 	async function createResource(formData: FormData) {
 		'use server'
+		const { user } = await validateRequest()
 		const siteUrl = formData.get('siteUrl') as string
-		const classNumber = formData.get('classNumber')
+		const classNumber = formData.get('classNumber') as string
 		const isLiked = formData.get('isLiked')
 
 		// insert (optional) and return resource
-		let storedResource
-		if (siteUrl) {
-			storedResource = await db
-				.insert(resources)
-				.values({ link: siteUrl })
-				.onConflictDoNothing({ target: resources.link })
-				.returning()
+		let storedResource = await db.query.resources.findFirst({
+			where: (resources, {eq}) => eq(resources.link, siteUrl),
+		});
+
+		if (!storedResource) {
+		[storedResource] = await db
+			.insert(resources)
+			.values({ link: siteUrl })
+			.returning()
 		}
-		// use courseResource to add a vote
+		// look up class
+		const currentClass = await db.query.classes.findFirst({
+			where: (classes, { eq }) => eq(classes.classNumber, classNumber),
+		})
+
+		// TODO: throw error, or ask for class if !currentClass
 
 		// add vote
-		await db.insert(votes).values({}).onConflictDoNothing({ // TODO: add values object
-			target: [
-				votes.userId,
-				votes.classId,
-				votes.courseResourcesId
-			], // Note: must match columns in schema.ts (manual for Drizzle v0.30)
+		await db.insert(votes).values({
+			userId: user!.id,
+			resourceId: storedResource!.id,
+			classId: currentClass?.id!,
+			isLiked: true,
+			})
+			.onConflictDoNothing({ // TODO: add values object
+				target: [
+					votes.userId,
+					votes.classId,
+					votes.resourceId
+				], // Note: must match columns in schema.ts (manual for Drizzle v0.30)
 		})
 	}
 	return (

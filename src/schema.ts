@@ -11,7 +11,11 @@ import {
 export const users = pgTable('users', {
 	id: text('id').primaryKey(),
 	githubId: integer('github_id').unique(),
-	username: text('user'),
+	username: text('username'),
+	currentCourseId: integer('current_course_id')
+	.references(() => courses.id),
+	currentClassId: integer('current_class_id')
+	.references(() => classes.id),
 })
 export const sessions = pgTable('sessions', {
 	id: text('id').primaryKey(),
@@ -41,35 +45,26 @@ export const resources = pgTable('resources', {
 	name: text('name'),
 	format: text('format'),
 })
-export const courseResources = pgTable('course_resources', {
-	id: serial('id').notNull().primaryKey(),
-	courseId: integer('course_id')
-		.notNull()
-		.references(() => courses.id),
-	resourceId: integer('resource_id')
-		.notNull()
-		.references(() => resources.id),
-})
 export const votes = pgTable('votes', {
-	// id: serial('id').notNull().primaryKey(),
 	userId: text('user_id')
 		.notNull()
 		.references(() => users.id),
-	courseResourcesId: integer('course_resource_id')
+	resourceId: integer('resource_id')
 		.notNull()
-		.references(() => courseResources.id),
+		.references(() => resources.id),
 	classId: integer('class_id')
 		.notNull()
 		.references(() => classes.id),
 	isLiked: boolean('is_liked').notNull(),
-}, (table) => {
+},
+ (table) => {
 	return {
 		pk: primaryKey({
 			name: 'vote_id',
 			columns: [
 				table.userId,
 				table.classId,
-				table.courseResourcesId
+				table.resourceId
 			]
 		})
 	}
