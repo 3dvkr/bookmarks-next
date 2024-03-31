@@ -16,9 +16,11 @@ export default async function Slug({ params }: any) {
 		} else {
 			const currentCourseInfo = await db.query.courses.findFirst({
 				where: (courses, { eq }) => eq(courses.id, currentCourseId),
+				columns: {name: true}
 			})
+			if (!currentCourseInfo) return redirect (`/`) // TODO: show error, toast
 			// `course` is not dynamic;
-			return redirect(`/course/${currentCourseId}/${slug}`)
+			return redirect(`/course/${currentCourseInfo.name.replaceAll(" ", "-")}/${slug}`)
 		}
 	}
 }
