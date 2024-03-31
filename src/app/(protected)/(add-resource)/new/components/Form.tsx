@@ -2,6 +2,7 @@ import { validateRequest } from '@/auth'
 import { db } from '@/db'
 import { resources, votes } from '@/schema'
 import { redirect } from 'next/navigation'
+
 export default async function Form({
 	url,
 	currentClass,
@@ -15,8 +16,8 @@ export default async function Form({
 		const siteUrl = formData.get('siteUrl') as string
 		const classNumber = formData.get('classNumber') as string
 		const isLiked = formData.get('isLiked')
-try {
-		// insert (optional) and return resource
+		try {
+			// insert (optional) and return resource
 		let storedResource = await db.query.resources.findFirst({
 			where: (resources, { eq }) => eq(resources.link, siteUrl),
 		})
@@ -34,18 +35,19 @@ try {
 
 		// TODO: throw error, or ask for class if !currentClass
 
-		// add vote
+		// add vote; TODO: add option to change vote
 		await db
 			.insert(votes)
 			.values({
 				userId: user!.id,
 				resourceId: storedResource!.id,
 				classId: currentClass?.id!,
-				isLiked: true,
+				isLiked: isLiked === "liked",
 			})
-			.onConflictDoNothing({
+			.onConflictDoUpdate({
 				// TODO: add values object
 				target: [votes.userId, votes.classId, votes.resourceId], // Note: must match columns in schema.ts (manual for Drizzle v0.30)
+				set: {isLiked: isLiked === "liked"} // TODO: update cache in utils/ts
 			})}catch (err) {
 				// TODO: handle error, toast?
 				console.log(`🎈 err:`,  err)
@@ -64,15 +66,23 @@ try {
 				name="classNumber"
 				defaultValue={currentClass || ''}
 			/>
+
 			<fieldset>
-				<legend>Did this resource help you with your current class?</legend>
+				<legend>
+					Did this resource help you understand your current class material?
+				</legend>
 				<div>
 					<input type="radio" id="liked" name="isLiked" value="liked" />
-					<label htmlFor="liked">Liked</label>
+					<label htmlFor="isLiked">Yes</label>
 				</div>
 				<div>
-					<input type="radio" id="disliked" name="isLiked" value="disliked" />
-					<label htmlFor="disliked">Disliked</label>
+					<input
+						type="radio"
+						id="disliked"
+						name="isLiked"
+						value="disliked"
+					/>
+					<label htmlFor="isLiked">No</label>
 				</div>
 			</fieldset>
 			<button>CLICK</button>
