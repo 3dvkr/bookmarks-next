@@ -1,6 +1,6 @@
-import { getVotedResources } from '@/utils'
+import { ClassVotes, getVotedResources } from '@/utils'
 
-function ResourceInfo({ info }: any) {
+function ResourceInfo({ info }: {info: ClassVotes}) {
 	return (
 		<div style={{ margin: '1em', padding: '1em', border: '1px solid fuchsia' }}>
 			<p>Link: {info.link}</p>

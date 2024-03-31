@@ -1,22 +1,20 @@
 import { sql } from 'drizzle-orm'
 import { db } from './db'
-import { RowList } from 'postgres'
 
-export interface ClassVotes {
+export interface ClassVotes extends Record<string,unknown> {
   link: string,
   likes: string,
   dislikes: string
 }
-type votes = RowList<Record<string, ClassVotes>[]>
 
-const cache: Record<string, votes> = {}
+const cache: Record<string, ClassVotes[]> = {}
 
 export const getVotedResources = async (classNum: string) => {
   if (cache.hasOwnProperty(classNum)) {
     return cache[classNum]
   }
   // TODO: replace hard-coded course_id with the one from user's data
-	const votedResources: votes = await db.execute(
+	const votedResources = await db.execute<ClassVotes>(
 		sql`SELECT     
     r.link,
     r.name,
