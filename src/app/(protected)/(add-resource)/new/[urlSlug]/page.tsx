@@ -1,4 +1,19 @@
-import Form from "../components/Form"
-export default async function NewForm({ params }: any ) {
-  return <Form str={params.urlSlug}/>
+import { validateRequest } from '@/auth'
+import Form from '../components/Form'
+import { db } from '@/db'
+export default async function NewForm({
+	params,
+}: {
+	params: { urlSlug: string }
+}) {
+	// TODO: reduce roundtrips
+	const { user } = await validateRequest()
+	const { currentClassId } = user! // under protected route layout
+	const classInfo = await db.query.classes.findFirst({
+		where: (classes, { eq }) => eq(classes.id, currentClassId!),
+		columns: {
+			classNumber: true
+		}
+	})
+	return <Form url={params.urlSlug} currentClass={classInfo?.classNumber} />
 }
