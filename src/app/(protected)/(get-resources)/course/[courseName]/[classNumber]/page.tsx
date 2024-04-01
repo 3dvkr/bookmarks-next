@@ -2,7 +2,7 @@ import { ClassVotes, getVotedResources } from '@/utils'
 
 function ResourceInfo({ info }: {info: ClassVotes}) {
 	return (
-		<div style={{ margin: '1em', padding: '1em', border: '1px solid fuchsia' }}>
+		<div style={{ margin: '1em', padding: '1em', border: '1px solid black' }}>
 			<p>Link: {info.link}</p>
 			<p>Likes: {info.likes}</p>
 			<p>Dislikes: {info.dislikes}</p>
