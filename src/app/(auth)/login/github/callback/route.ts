@@ -1,9 +1,9 @@
-// import { v4 as uuidv4 } from 'uuid'
 import { github, lucia } from '@/auth'
-import { db, users } from '@/db'
+import { db, users, courses } from '@/db'
 import { cookies } from 'next/headers'
 import { OAuth2RequestError } from 'arctic'
 import { generateId } from 'lucia'
+import { eq } from 'drizzle-orm'
 
 export async function GET(request: Request): Promise<Response> {
 	const url = new URL(request.url)
@@ -27,22 +27,28 @@ export async function GET(request: Request): Promise<Response> {
 		const githubUser: GitHubUser = await githubUserResponse.json()
 
 		// Replace this with your own DB client.
-		const existingUser = await db.query.users.findFirst({
-			where: (users, { eq }) => eq(users.githubId, githubUser.id),
-		})
+		const [existingUser] = await db
+			.select()
+			.from(users)
+			.where(eq(users.githubId, githubUser.id)) // TODO: add wrong id
+			.leftJoin(courses, eq(users.currentCourseId, courses.id)) 
 
 		if (existingUser) {
-			const session = await lucia.createSession(existingUser.id, {})
+			const session = await lucia.createSession(existingUser.users.id, {})
 			const sessionCookie = lucia.createSessionCookie(session.id)
 			cookies().set(
 				sessionCookie.name,
 				sessionCookie.value,
 				sessionCookie.attributes
 			)
+			let redirectPath = "/" // TODO: change to profile
+			if (existingUser.courses) {
+				redirectPath = `/course/${existingUser.courses.name.replaceAll(" ", "-")}`
+			}
 			return new Response(null, {
 				status: 302,
 				headers: {
-					Location: '/',
+					Location: redirectPath,
 				},
 			})
 		}
@@ -55,7 +61,6 @@ export async function GET(request: Request): Promise<Response> {
 			githubId: githubUser.id,
 			username: githubUser.login,
 		})
-		// .returning()
 
 		const session = await lucia.createSession(userId, {})
 		const sessionCookie = lucia.createSessionCookie(session.id)
