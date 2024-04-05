@@ -56,11 +56,11 @@ export async function GET(request: Request): Promise<Response> {
 		const userId = generateId(15)
 
 		// Replace this with your own DB client.
-		await db.insert(users).values({
+		const [newUser] = await db.insert(users).values({
 			id: userId,
 			githubId: githubUser.id,
 			username: githubUser.login,
-		})
+		}).returning()
 
 		const session = await lucia.createSession(userId, {})
 		const sessionCookie = lucia.createSessionCookie(session.id)
@@ -72,7 +72,7 @@ export async function GET(request: Request): Promise<Response> {
 		return new Response(null, {
 			status: 302,
 			headers: {
-				Location: '/',
+				Location: '/users/' + newUser.username,
 			},
 		})
 	} catch (e: any) {
