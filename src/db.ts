@@ -7,4 +7,4 @@ const connectionString = process.env.NEXT_PUBLIC_DATABASE_URL!
 const client = postgres(connectionString, { prepare: false })
 
 export const db = drizzle(client, { schema })
-export { users, sessions } from './schema'
+export { users, sessions, courses } from './schema'
