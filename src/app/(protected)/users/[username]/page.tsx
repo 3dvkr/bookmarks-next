@@ -4,7 +4,7 @@ import SettingsForm from './components/SettingsForm'
 import { validateRequest } from '@/auth'
 import { eq } from 'drizzle-orm'
 
-export default async function Page() {
+export default async function Page(props: any) {
 	const { user } = await validateRequest()
 	const [userInfo] = await db
 		.select({
@@ -18,6 +18,7 @@ export default async function Page() {
 		.where(eq(users.id, user!.id)) // user exists because protected route
 		.leftJoin(courses, eq(users.currentCourseId, courses.id))
 		.leftJoin(classes, eq(users.currentClassId, classes.id))
+
 	return (
 		<>
 			<h1>User Profile Page</h1>
@@ -25,6 +26,7 @@ export default async function Page() {
 				username={userInfo.username}
 				currentCourse={userInfo.currentCourse}
 				currentClass={userInfo.currentClass}
+				options={props.searchParams}
 			/>
 		</>
 	)
