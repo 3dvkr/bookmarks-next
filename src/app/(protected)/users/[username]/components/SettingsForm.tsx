@@ -8,10 +8,12 @@ export default async function SettingsForm({
 	username,
 	currentCourse,
 	currentClass,
+	options
 }: {
 	username: string | null
 	currentCourse?: string | null
 	currentClass?: string | null
+	options?: any
 }) {
 	async function updateUserInfo(formData: FormData) {
 		'use server'
@@ -56,6 +58,10 @@ export default async function SettingsForm({
 			redirect(`/course/${currentCourse.replaceAll(" ", "-")}`)
 		}
 	}
+
+	const missingCourseStyle = options?.missingCourse === 'true' ? {border: "1px solid red"} : {}
+	const missingClassStyle = options?.missingClass === 'true' ? {border: "1px solid red"} : {}
+
 	return (
 		<>
 			<h2>{username}</h2>
@@ -67,6 +73,7 @@ export default async function SettingsForm({
 					id="currentCourse"
 					name="currentCourse"
 					defaultValue={currentCourse || ''}
+					style={missingCourseStyle}
 				/>
 				{/* TODO: text field is a search box, then send a query with search terms to db and provide suggestions or option to create a new course */}
 				<label htmlFor="currentClass">Current Class: </label>
@@ -74,7 +81,8 @@ export default async function SettingsForm({
 					type="number"
 					id="currentClass"
 					name="currentClass"
-					defaultValue={currentClass || '1'}
+					defaultValue={currentClass || '1'} // FIXME: redirects to 1?
+					style={missingClassStyle}
 				/>
 				<button>CLICK</button>
 			</form>
